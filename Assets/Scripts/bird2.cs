@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using CodeMonkey;
+
 
 public class bird2 : MonoBehaviour{
     private const float JUMP_AMOUNT = 100f;
@@ -12,11 +14,12 @@ public class bird2 : MonoBehaviour{
     }
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)) {
-            Jump();
+        Jump();
         }
     }
     private void Jump() {
         birdRigidbody2D.velocity = Vector2.up * JUMP_AMOUNT;
     }
-    
+    private void OnTriggerEnter2D(Collider2D collider){
+    }
 }
