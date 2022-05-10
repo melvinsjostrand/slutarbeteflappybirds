@@ -5,7 +5,7 @@ using CodeMonkey;
 
 
 public class bird2 : MonoBehaviour{
-    private const float JUMP_AMOUNT = 100f;
+    private const float JUMP_AMOUNT = 70f;
 
     private Rigidbody2D birdRigidbody2D;
 
