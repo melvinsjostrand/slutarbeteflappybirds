@@ -9,6 +9,7 @@ public class Level : MonoBehaviour{
     private const float PIPE_WIDTH = 7.8f;
     private const float PIPE_HEAD_HEIGHT = 3.75f;
     private const float PIPE_MOVE_SPEED = 5f;
+    private const float PIPE_DESTROY_X_POSITION = -120f;
 
 
 
@@ -28,8 +29,15 @@ private void Awake(){
  }
 // för att göra så att pipsen rör sig
 private void HandlePipeMovement(){
-    foreach(Pipe pipe in pipeList){
+   for(int i=0; i<pipeList.Count; i++){
+       Pipe pipe = pipeList[i];
         pipe.Move();
+        if (pipe.GetXPosition() < PIPE_DESTROY_X_POSITION){
+            //förstör pipe
+            pipe.DestroySelf();
+            pipeList.Remove(pipe);
+            i--;
+        }
     }
 }
 
@@ -90,7 +98,14 @@ public void Move(){
    pipeBodyTransform.position += new Vector3(-1, 0, 0) * PIPE_MOVE_SPEED * Time.deltaTime;
    pipeHeadTransform.position += new Vector3(-1, 0, 0) * PIPE_MOVE_SPEED * Time.deltaTime; 
 }
+    public float GetXPosition(){
+        return pipeHeadTransform.position.x;
+    }
 
+public void DestroySelf() {
+    Destroy( pipeHeadTransform.gameObject);
+    Destroy( pipeBodyTransform.gameObject);
+}
 }
 
 }
