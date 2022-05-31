@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using CodeMonkey;
+using CodeMonkey.Utils;
 public class Level : MonoBehaviour{
 
 
@@ -11,13 +12,22 @@ public class Level : MonoBehaviour{
     private const float PIPE_MOVE_SPEED = 30f;
     private const float PIPE_DESTROY_X_POSITION = -100f;
     private const float PIPE_SPAWN_X_POSITION = +100f;
+    private const float BIRD_X_POSITION = 0f;
 
+
+private static Level instance;
+
+public static Level GetInstance(){
+    return instance;
+}
 
 private List<Pipe> pipeList;
 private float pipeSpawnTimer;
+private int pipesPassedCount;
 private float pipesSpawned;
 private float pipeSpawnTimerMax;
 private float gapSize;
+private State state;
 
 
 public enum Difficulty{
@@ -27,20 +37,39 @@ public enum Difficulty{
     Impossible,
 }
 
+private enum State {
+    Playing,
+    BirdDead,
+}
+
 private void Awake(){
+    instance = this;
     pipeList = new List<Pipe>();
     pipeSpawnTimerMax = 1f;
     SetDifficulty(Difficulty.Easy);
+    state = State.Playing;
 }
 
 
     private void Start() {
      //  CreateGapPipes(50f, 20f, 20f);
+     bird2.GetInstance().OnDied += bird2_OnDied;
+
  }
+private void bird2_OnDied(object sender, System.EventArgs e){
+  //  CMDebug.TextPopupMouse("död");
+  state = State.BirdDead;
+
+  FunctionTimer.Create(()=>{
+      UnityEngine.SceneManagement.SceneManager.LoadScene("spelscen");
+  }, 1f);
+}
 
  private void Update(){
+     if(state == State.Playing){
      HandlePipeMovement();
      HandlePipeSpawning();
+     }
  }
 
 private void HandlePipeSpawning(){
@@ -64,7 +93,11 @@ private void HandlePipeSpawning(){
 private void HandlePipeMovement(){
    for(int i=0; i<pipeList.Count; i++){
        Pipe pipe = pipeList[i];
+       bool isToTheRightOfBird = pipe.GetXPosition() > BIRD_X_POSITION;
         pipe.Move();
+        if (isToTheRightOfBird && pipe.GetXPosition() <= BIRD_X_POSITION && pipe.IsBottom()){
+            pipesPassedCount++;
+        }
         if (pipe.GetXPosition() < PIPE_DESTROY_X_POSITION){
             //förstör pipe
             pipe.DestroySelf();
@@ -147,18 +180,28 @@ SetDifficulty(GetDifficulty());
         pipeBodyBoxCollider.size = new Vector2(PIPE_WIDTH, height);
         pipeBodyBoxCollider.offset = new Vector2(0f, height * .5f);
 
-        Pipe pipe = new Pipe(pipeHead, pipeBody);
+        Pipe pipe = new Pipe(pipeHead, pipeBody, createBottom);
         pipeList.Add(pipe);
+    
+
+}
+    public float GetPipesSpawned(){
+        return pipesSpawned;
+    }
+
+    public int GetpipesPassedCount(){
+        return pipesPassedCount;
     }
 
 /* för en pipe */
 private class Pipe {
     private Transform pipeHeadTransform;
     private Transform pipeBodyTransform;
-
-        public Pipe(Transform pipeHeadTransform, Transform pipeBodyTransform){
+    private bool isBottom;
+        public Pipe(Transform pipeHeadTransform, Transform pipeBodyTransform, bool isBottom){
             this.pipeBodyTransform = pipeBodyTransform;
             this.pipeHeadTransform = pipeHeadTransform;
+            this.isBottom = isBottom;
         }
 
 
@@ -171,6 +214,9 @@ public void Move(){
         return pipeHeadTransform.position.x;
     }
 
+public bool IsBottom(){
+    return isBottom;
+}
 public void DestroySelf() {
     Destroy( pipeHeadTransform.gameObject);
     Destroy( pipeBodyTransform.gameObject);
